@@ -35,8 +35,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:28px}
   <div class="brand"><div class="logo">🦅</div><div><h1>Hawkeye Jobs</h1><p>لوحة متابعة فرص العمل — نسخة شخصية</p></div></div>
   <div class="actions">
     <button class="btn" id="refresh">تحديث النتائج</button>
-    <a class="btn primary" href="${ACTIONS_URL}" target="_blank" rel="noopener">تشغيل بحث الآن</a>
-    <a class="btn" href="${CONFIG_URL}" target="_blank" rel="noopener">إعدادات البحث</a>
+    <a class="btn primary" href="__ACTIONS_URL__" target="_blank" rel="noopener">تشغيل بحث الآن</a>
+    <a class="btn" href="__CONFIG_URL__" target="_blank" rel="noopener">إعدادات البحث</a>
   </div>
 </header>
 <p class="note" id="lastUpdate">جارٍ تحميل النتائج…</p>
@@ -160,7 +160,7 @@ export default {
       return new Response("Method not allowed", {status:405});
     }
     if (path === root || path === root + "/") {
-      const page = HTML.replaceAll("__ROOT__", root);
+      const page = HTML.replaceAll("__ROOT__", root).replaceAll("__ACTIONS_URL__", ACTIONS_URL).replaceAll("__CONFIG_URL__", CONFIG_URL);
       return new Response(page, {headers:headers("text/html; charset=utf-8")});
     }
     if (path === root + "/jobs.json") {
