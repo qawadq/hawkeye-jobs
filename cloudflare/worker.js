@@ -22,6 +22,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:16px;fl
 .brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;border-radius:14px;background:#1d3557;display:grid;place-items:center;font-size:25px}.brand h1{font-size:22px;margin:0;line-height:1.25}.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);border-radius:11px;background:var(--panel2);color:var(--text);padding:9px 13px;font-weight:600}.btn.primary{background:#235da8;border-color:#3477c7;color:#fff}.btn:disabled{opacity:.55;cursor:wait}
 .note{margin:16px 0;color:var(--muted);font-size:13px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}.stat{background:rgba(18,30,51,.92);border:1px solid var(--line);border-radius:15px;padding:14px}.stat span{display:block;color:var(--muted);font-size:12px}.stat strong{font-size:25px;display:block;margin-top:3px}
+.source-status{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}.source-chip{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:7px 10px;font-size:12px;color:var(--muted)}.source-chip b{color:var(--text);margin-inline-start:5px}.source-chip.ok{border-color:#286b50}.source-chip.partial{border-color:#8b6b2c}.source-chip.failed{border-color:#824747}
 .filters{display:grid;grid-template-columns:1fr 190px 180px;gap:10px;margin:20px 0 12px}.field{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 13px;color:var(--text);min-width:0;outline:none}.field:focus{border-color:var(--accent)}
 .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 18px}.tab{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:7px 13px}.tab.active{background:#1d3d65;color:#fff;border-color:#4679b3}
 .meta{color:var(--muted);font-size:12px;display:flex;gap:10px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.job{background:rgba(18,30,51,.94);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}.job h2{font-size:17px;line-height:1.45;margin:7px 0 8px}.desc{color:#c3d0e0;font-size:13px;margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere}.jobfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px}.status-actions{display:flex;gap:6px;flex-wrap:wrap}.small{font-size:12px;padding:6px 9px}.pill{display:inline-block;padding:3px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:11px}.source{color:#b7d4ff}.empty,.error{background:var(--panel);border:1px dashed var(--line);border-radius:15px;padding:28px;text-align:center;color:var(--muted);grid-column:1/-1}.error{color:var(--red)}
@@ -46,6 +47,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:28px}
   <div class="stat"><span>محفوظة</span><strong id="savedCount">—</strong></div>
   <div class="stat"><span>تم التقديم</span><strong id="appliedCount">—</strong></div>
 </section>
+<section class="source-status" id="sourceStatus" aria-label="حالة مصادر البحث"></section>
 <div class="filters">
   <input id="search" class="field" type="search" placeholder="ابحث بالمسمى أو الشركة أو الدولة…">
   <select id="source" class="field"><option value="">كل المصادر</option><option value="linkedin">LinkedIn</option><option value="indeed">Indeed</option><option value="bayt">Bayt</option><option value="naukrigulf">NaukriGulf</option><option value="google_jobs">Google Jobs</option></select>
@@ -66,6 +68,7 @@ const ROOT="__ROOT__";
 const STATUS_KEY="hawkeye-jobs-status-v1";
 const statusNames={new:"جديدة",saved:"محفوظة",applied:"تم التقديم",dismissed:"مستبعدة"};
 const sourceNames={linkedin:"LinkedIn",indeed:"Indeed",bayt:"Bayt",naukrigulf:"NaukriGulf",google_jobs:"Google Jobs"};
+const sourceStatusNames={ok:"يعمل",partial:"جزئي",failed:"فشل",not_run:"لم يعمل"};
 let data={jobs:[],summary:{},updated_at:null},activeStatus="all";
 let statuses={};
 try{statuses=JSON.parse(localStorage.getItem(STATUS_KEY)||"{}")||{}}catch{}
@@ -118,6 +121,15 @@ async function load(){
   if(!r.ok)throw new Error("HTTP "+r.status);
   data=await r.json();
   const s=data.summary||{};
+  const sourceBox=el("sourceStatus");sourceBox.replaceChildren();
+  const perSource=s.per_source||{};
+  for(const [key,label] of Object.entries(sourceNames)){
+   const item=perSource[key]||{status:"not_run",successful_queries:0,failed_queries:0,found:0};
+   const chip=make("div","source-chip "+(item.status||"not_run"));
+   chip.append(make("span","",label),make("b","",sourceStatusNames[item.status]||"غير معروف"),
+     make("span","", " · "+(item.found||0)+" وظيفة · "+(item.successful_queries||0)+" ناجح · "+(item.failed_queries||0)+" فشل"));
+   sourceBox.append(chip);
+  }
   const date=data.updated_at?new Date(data.updated_at).toLocaleString("ar-EG"):"لم يعمل البحث بعد";
   el("lastUpdate").textContent="آخر تحديث: "+date+" · نتائج آخر تشغيل: "+(s.found_this_run||0)+" · استعلامات ناجحة: "+(s.successful_queries||0)+" · تعذر تنفيذ: "+(s.failed_queries||0);
   render();
