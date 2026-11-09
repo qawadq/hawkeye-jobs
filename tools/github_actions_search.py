@@ -102,6 +102,19 @@ def main() -> int:
     successful = [e for e in events if e.get("type") == "query_done"]
     failed = [e for e in events if e.get("type") == "query_failed"]
     skipped = [e for e in events if e.get("type") == "query_skipped"]
+    per_source = {}
+    for source in ("linkedin", "indeed", "bayt", "naukrigulf", "google_jobs"):
+        source_events = [e for e in events if e.get("source") == source]
+        done = [e for e in source_events if e.get("type") == "query_done"]
+        errors = [e for e in source_events if e.get("type") == "query_failed"]
+        omitted = [e for e in source_events if e.get("type") == "query_skipped"]
+        per_source[source] = {
+            "successful_queries": len(done),
+            "failed_queries": len(errors),
+            "skipped_queries": len(omitted),
+            "found": sum(int(e.get("found", 0)) for e in done),
+            "status": "ok" if done and not errors else "partial" if done else "failed" if errors else "not_run",
+        }
 
     if summary.state != "done":
         logging.error("Search ended with state=%s; retaining the last published snapshot", summary.state)
@@ -140,6 +153,7 @@ def main() -> int:
             "successful_queries": len(successful),
             "failed_queries": len(failed),
             "skipped_queries": len(skipped),
+            "per_source": per_source,
         },
         "jobs": all_jobs,
     }
