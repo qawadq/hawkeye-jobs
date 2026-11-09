@@ -1,0 +1,17 @@
+{
+  "keywords": [
+    "Quality Manager",
+    "Quality Engineer",
+    "QC Manager",
+    "Production Manager",
+    "Production Engineer",
+    "Process Engineer"
+  ],
+  "locations": ["eg", "sa", "ae", "qa", "kw", "om"],
+  "sources": ["linkedin", "indeed", "bayt", "naukrigulf", "google_jobs"],
+  "app": {
+    "language": "ar",
+    "theme": "auto",
+    "job_age_days": 14
+  }
+}
