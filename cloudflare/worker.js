@@ -148,9 +148,7 @@ function headers(type) {
 
 export default {
   async fetch(request, env) {
-    const key = env.ACCESS_KEY;
-    if (!key) return new Response("Service not configured", {status:503});
-    const root = "/s/" + key;
+    const root = "";
     const url = new URL(request.url);
     const path = url.pathname;
     if (path !== root && path !== root + "/" && !path.startsWith(root + "/")) {
