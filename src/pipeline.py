@@ -225,6 +225,10 @@ def _browser_lane(queries, fetchers, driver_factory, keywords, cancel, out, thro
             return
         try:
             driver = driver_factory()
+            try:
+                driver.set_page_load_timeout(25)
+            except Exception:
+                log.warning("Could not set browser page-load timeout")
         except ChromeNotFound:
             log.warning("Google Chrome not found; skipping browser sources")
             out.put(("event", {"type": "browser_failed", "reason": "chrome_not_found"}))
@@ -258,6 +262,10 @@ def _browser_lane(queries, fetchers, driver_factory, keywords, cancel, out, thro
                     restarts_left -= 1
                     try:
                         driver = driver_factory()
+                        try:
+                            driver.set_page_load_timeout(25)
+                        except Exception:
+                            log.warning("Could not set browser page-load timeout after restart")
                         log.info("Chrome restarted after a crash")
                         continue
                     except Exception:
