@@ -1,0 +1,35 @@
+services:
+  hawkeye:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hawkeye-jobs
+    restart: unless-stopped
+    env_file:
+      - .env.web
+    environment:
+      PORT: "8000"
+      HAWKEYE_DATA_DIR: /data
+    volumes:
+      - ./hawkeye-data:/data
+    ports:
+      - "127.0.0.1:8765:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3).read()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 120s
+      retries: 3
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: hawkeye-cloudflared
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    env_file:
+      - .env.web
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["exec cloudflared tunnel --no-autoupdate run --token \"$CLOUDFLARE_TUNNEL_TOKEN\""]
+    depends_on:
+      hawkeye:
+        condition: service_healthy

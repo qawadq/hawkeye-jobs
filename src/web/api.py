@@ -51,6 +51,7 @@ def get_state(request: Request):
     latest = app.get("latest_version")
     return {
         "version": s.version,
+        "hosted": bool(getattr(s, "hosted", False)),
         "onboarding_done": app["onboarding_done"],
         "language": app["language"],
         "theme": app["theme"],
@@ -303,7 +304,8 @@ def report_problem(request: Request):
     except OSError:
         lines = []
     url = _issue_url(s, lines)
-    s.open_url(url)
+    if not getattr(s, "hosted", False):
+        s.open_url(url)
     return {"url": url}
 
 

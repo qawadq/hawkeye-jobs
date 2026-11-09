@@ -114,6 +114,12 @@ For UI development, serve without a window on a fixed port and open the printed 
 
     HAWKEYE_DATA_DIR=/tmp/hawkeye-dev venv/bin/python3 src/app.py --no-window --port 8765
 
+## Personal web app (single user)
+
+The optional web deployment keeps the existing Arabic/English interface and job-search engine, but runs them in a private browser-based service. It has one password-protected workspace; there is no public registration or multi-user account system.
+
+See [docs/WEB_DEPLOYMENT.md](docs/WEB_DEPLOYMENT.md) for the Docker setup, persistent data folder, HTTPS tunnel notes, backups and security settings. The original desktop and terminal modes remain available.
+
 ## Building the app
 
 ```bash

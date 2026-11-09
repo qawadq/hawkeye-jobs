@@ -36,7 +36,8 @@ export class ApiError extends Error {
 
 export function createApi(token, fetchImpl = (...args) => window.fetch(...args)) {
   async function request(method, path, body) {
-    const headers = { "X-Hawkeye-Token": token };
+    const headers = {};
+    if (token) headers["X-Hawkeye-Token"] = token;
     if (body !== undefined) headers["Content-Type"] = "application/json";
     let response;
     try {
@@ -53,7 +54,10 @@ export function createApi(token, fetchImpl = (...args) => window.fetch(...args))
     } catch (error) {
       data = null;
     }
-    if (!response.ok) throw new ApiError(response.status, data);
+    if (!response.ok) {
+      if (response.status === 401 && !token && path !== "/api/auth/status") window.location.replace("/");
+      throw new ApiError(response.status, data);
+    }
     return data;
   }
 
@@ -63,6 +67,6 @@ export function createApi(token, fetchImpl = (...args) => window.fetch(...args))
     put: (path, body) => request("PUT", path, body),
     patch: (path, body) => request("PATCH", path, body),
     // EventSource cannot send headers; /api/events is the only endpoint that accepts ?token=.
-    events: () => new EventSource(`/api/events?token=${encodeURIComponent(token)}`),
+    events: () => new EventSource(token ? `/api/events?token=${encodeURIComponent(token)}` : "/api/events"),
   };
 }
