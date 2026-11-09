@@ -1,0 +1,12 @@
+{
+  "updated_at": null,
+  "summary": {
+    "state": "not_run",
+    "found_this_run": 0,
+    "new_this_run": 0,
+    "job_count": 0,
+    "successful_queries": 0,
+    "failed_queries": 0
+  },
+  "jobs": []
+}
