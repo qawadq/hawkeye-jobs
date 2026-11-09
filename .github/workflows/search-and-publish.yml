@@ -14,12 +14,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: hawkeye-search
-  cancel-in-progress: false
+  group: hawkeye-search-v2
+  cancel-in-progress: true
 
 jobs:
   search:
     runs-on: ubuntu-22.04
+    timeout-minutes: 38
     timeout-minutes: 45
     steps:
       - name: Check out repository
