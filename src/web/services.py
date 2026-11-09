@@ -77,6 +77,7 @@ class AppServices:
     fetch_latest_release: Callable
     version: str
     store: bool = False                            # the Microsoft Store app: the Store delivers updates
+    hosted: bool = False                           # browser-hosted single-user deployment
     show_window: Callable = lambda: None           # set by app.py once the window exists
     background: Callable = lambda: {"tray": False, "autostart": False}  # what this system supports
     set_start_at_login: Callable = lambda enabled: None

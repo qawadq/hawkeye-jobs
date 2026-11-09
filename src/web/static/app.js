@@ -167,6 +167,13 @@ function hawkeye() {
       const source = api.events();
       // (Re)connected: the server may have dropped us while we were slow or asleep. Resync.
       source.onopen = () => { this.refreshState().catch(() => {}); };
+      source.onerror = () => {
+        if (this.state && this.state.hosted) {
+          api.get("/api/auth/status").then((status) => {
+            if (!status.authenticated) location.replace("/");
+          }).catch(() => {});
+        }
+      };
       source.onmessage = (message) => {
         let event;
         try {
@@ -554,7 +561,19 @@ function hawkeye() {
       if (info.available) return this.t("settings.update_available", { version: info.latest });
       return info.latest ? this.t("settings.up_to_date") : this.t("settings.update_unknown");
     },
+    async logout() {
+      try {
+        await api.post("/api/auth/logout");
+        location.replace("/");
+      } catch (error) {
+        this.showError(error);
+      }
+    },
     async openUrl(url) {
+      if (this.state && this.state.hosted) {
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
       try {
         await api.post("/api/open-url", { url });
       } catch (error) {
@@ -562,6 +581,7 @@ function hawkeye() {
       }
     },
     async openDataFolder() {
+      if (this.state && this.state.hosted) return;
       try {
         await api.post("/api/open-data-folder");
       } catch (error) {
@@ -570,8 +590,12 @@ function hawkeye() {
     },
     async reportProblem() {
       try {
-        await api.post("/api/report-problem"); // the backend opens the issue page itself
-        this.notify("info", "settings.report_opened");
+        const result = await api.post("/api/report-problem");
+        if (this.state && this.state.hosted && result && result.url) {
+          window.open(result.url, "_blank", "noopener,noreferrer");
+        } else {
+          this.notify("info", "settings.report_opened");
+        }
       } catch (error) {
         this.notify("error", "error.report_failed");
       }

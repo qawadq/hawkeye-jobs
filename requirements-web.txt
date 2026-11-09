@@ -1,0 +1,12 @@
+# Runtime dependencies for hosted FastAPI + job search. Python 3.12 is required.
+python-jobspy==1.1.80
+pandas==2.3.3
+requests==2.33.1
+certifi==2026.02.25
+beautifulsoup4==4.14.3
+undetected-chromedriver==3.5.5
+selenium==4.43.0
+setuptools==82.0.1
+platformdirs==4.12.4
+fastapi==0.143.0
+uvicorn==0.54.0

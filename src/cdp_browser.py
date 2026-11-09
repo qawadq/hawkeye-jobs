@@ -77,6 +77,8 @@ class CdpDriver:
                 "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding",
                 "--disable-background-timer-throttling",
                 "about:blank"]
+        if os.environ.get("HAWKEYE_CONTAINER") == "1":
+            args[1:1] = ["--no-sandbox", "--disable-dev-shm-usage"]
         if headless:
             args.insert(1, "--headless=new")
         flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0

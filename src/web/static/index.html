@@ -4,11 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Hawkeye Jobs</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <!-- Module first: it registers the "hawkeye" component on alpine:init before Alpine starts. -->
   <script type="module" src="app.js"></script>
   <script defer src="vendor/alpine.min.js"></script>
+  <script defer src="/pwa.js"></script>
 </head>
 <body x-data="hawkeye">
   <div class="boot" x-show="!ready && !fatal">
@@ -36,6 +42,7 @@
     <header class="topbar">
       <span class="brand">Hawkeye Jobs</span>
       <div x-show="!inWizard()">
+        <button type="button" class="btn-ghost" x-show="state && state.hosted" @click="logout()" x-text="lang === 'ar' ? 'تسجيل الخروج' : 'Sign out'"></button>
         <button type="button" class="btn" x-show="!run" :disabled="starting" @click="startSearch()" x-text="t('run.start')"></button>
         <button type="button" class="btn-danger" x-show="run" :disabled="!!(run && run.stopping)" @click="stopSearch()"
                 x-text="run && run.stopping ? t('run.stopping') : t('run.stop')"></button>
@@ -364,7 +371,7 @@
             <span x-text="t('settings.problem')"></span>
             <button type="button" class="btn-ghost" @click="reportProblem()" x-text="t('action.report_problem')"></button>
           </div>
-          <div class="setting">
+          <div class="setting" x-show="!state.hosted">
             <span x-text="t('settings.data_folder')"></span>
             <button type="button" class="btn-ghost" @click="openDataFolder()" x-text="t('settings.open_folder')"></button>
           </div>

@@ -2,6 +2,7 @@
 .env
 *.env
 !.env.example
+.env.web
 
 # Runtime data
 hawkeye.log
@@ -11,6 +12,7 @@ config.json
 countries_cache.json
 hawkeye.db
 hawkeye.db-*
+/hawkeye-data/
 
 # Python
 __pycache__/
