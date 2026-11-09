@@ -71,11 +71,26 @@ def main() -> int:
     labels = {str(item["id"]): item["label"] for item in countries}
     events: list[dict] = []
 
+    def log_event(event: dict) -> None:
+        kind = event.get("type", "event")
+        if kind == "query_started":
+            logging.info("START source=%s keyword=%s location=%s",
+                         event.get("source"), event.get("keyword"), event.get("location_id"))
+        elif kind == "query_done":
+            logging.info("DONE source=%s keyword=%s location=%s found=%s new=%s",
+                         event.get("source"), event.get("keyword"), event.get("location_id"),
+                         event.get("found", 0), event.get("new", 0))
+        elif kind in ("query_failed", "query_skipped"):
+            logging.warning("%s source=%s keyword=%s location=%s detail=%s",
+                            kind.upper(), event.get("source"), event.get("keyword"),
+                            event.get("location_id"), event.get("error") or event.get("reason"))
+        events.append(event)
+
     with Store() as store:
         store.recover_interrupted_runs()
         summary = run_search(
             settings,
-            on_event=events.append,
+            on_event=log_event,
             country_labels=labels,
             store=store,
             trigger="auto",
@@ -84,12 +99,16 @@ def main() -> int:
         rows = store.list_jobs(limit=1500, include_dismissed=True)
         jobs_now = [public_job(row) for row in rows]
 
-    if summary.state != "done":
-        raise RuntimeError(f"Search did not finish normally: {summary.state}")
-
     successful = [e for e in events if e.get("type") == "query_done"]
     failed = [e for e in events if e.get("type") == "query_failed"]
     skipped = [e for e in events if e.get("type") == "query_skipped"]
+
+    if summary.state != "done":
+        logging.error("Search ended with state=%s; retaining the last published snapshot", summary.state)
+        return 2
+    if not successful:
+        logging.error("No search source completed successfully; retaining the last published snapshot")
+        return 2
 
     output_path = ROOT / "data" / "jobs.json"
     old = read_json(output_path, {})
@@ -132,9 +151,6 @@ def main() -> int:
         "Search complete: %s found, %s new, %s jobs in published snapshot; %s successful and %s failed queries",
         summary.found, len(summary.new_jobs), len(all_jobs), len(successful), len(failed),
     )
-    if not successful and failed:
-        logging.error("Every attempted query failed; refusing to publish an empty/failed result set")
-        return 2
     return 0
 
 
