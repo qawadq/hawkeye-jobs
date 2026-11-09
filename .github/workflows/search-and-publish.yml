@@ -1,0 +1,68 @@
+name: Hawkeye Jobs search and publish
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "data/jobs.json"
+  schedule:
+    # 08:37 and 16:37 Cairo time (UTC+2 in winter); avoid the top of the hour.
+    - cron: "37 6,14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hawkeye-search
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-web.txt
+
+      - name: Install Chrome and virtual display
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb wget
+          wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb
+          sudo apt-get install -y /tmp/chrome.deb
+          google-chrome --version
+
+      - name: Install Hawkeye search engine
+        run: python -m pip install -r requirements-web.txt
+
+      - name: Run scheduled job search
+        env:
+          HAWKEYE_DATA_DIR: ${{ runner.temp }}/hawkeye-data
+          HAWKEYE_BROWSER: cdp
+          HAWKEYE_CONTAINER: "1"
+          PYTHONPATH: src
+        run: xvfb-run -a python tools/github_actions_search.py
+
+      - name: Publish refreshed job data
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/jobs.json
+          if git diff --cached --quiet; then
+            echo "No changes in the published job snapshot."
+            exit 0
+          fi
+          git commit -m "chore: refresh Hawkeye job results [skip ci]"
+          git push
